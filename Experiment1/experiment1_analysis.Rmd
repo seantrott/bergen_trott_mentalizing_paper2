@@ -1,0 +1,469 @@
+---
+title: "Experiment 1 Analysis"
+output: 
+  html_document:
+    toc: true
+---
+
+
+
+**Sean Trott and Benjamin Bergen** 
+2019
+
+# Data reading, cleaning
+
+```{r include=FALSE}
+library(tidyverse)
+library(forcats)
+library(lme4)
+library(effects)
+library(psych)
+```
+
+
+
+```{r}
+# setwd("/Users/seantrott/Dropbox/UCSD/Research/IndirectSpeechActs/2019_mentalizing_data/Experiment1/")
+main_plus_sst = read_csv("data/exp1_aggregated.csv")
+
+```
+
+## Overall demographics
+
+```{r}
+table(distinct(main_plus_sst, subject, gender)$gender)
+mean(distinct(main_plus_sst, subject, age)$age)
+sd(distinct(main_plus_sst, subject, age)$age)
+range(distinct(main_plus_sst)$age)
+
+```
+
+Differences in demographics across experiments?
+
+```{r}
+
+only_unique_subjects = main_plus_sst %>%
+  distinct(subject, gender, assignment, age)
+
+table(only_unique_subjects$assignment)
+
+summary(aov(data = only_unique_subjects,
+           age ~ assignment))
+
+
+df_with_gender = only_unique_subjects %>%
+  group_by(assignment, gender) %>%
+  summarise(num_gender = n())
+
+M = as.table(rbind(filter(df_with_gender, assignment == "4a")$num_gender,
+             rbind(filter(df_with_gender, assignment == "4b")$num_gender)))
+
+dimnames(M) <- list(gender = c("Female", "Male"),
+                    assignment = c("4a", "4b"))
+
+M
+chisq.test(M)
+
+```
+
+
+## Break into two experiments
+
+```{r}
+coded_3a = main_plus_sst %>%
+  filter(assignment == "4a")
+length(unique(coded_3a$subject))
+
+coded_3b = main_plus_sst %>%
+  filter(assignment == "4b")
+length(unique(coded_3b$subject))
+```
+
+
+# Analysis: Indirect requests task
+
+After merging with the SST data, we now analyze performance on the indirect requests task.
+
+Here, we build two logistic mixed effects models: one to predict the effect of condition ("stimType") on interpretation or knowledge, and a null model to compare the first to. 
+
+```{r}
+
+main_plus_sst %>%
+  ggplot(aes(x = condition,
+             y = numeric_categorization2)) +
+  geom_bar(stat="summary", fun.y="mean", position = "dodge") +
+  stat_summary (fun.y = function(x){mean(x)},
+                fun.ymin = function(x){mean(x) - 1*sd(x)/sqrt(length(x))},
+                fun.ymax = function(x){mean(x) + 1*sd(x)/sqrt(length(x))},
+                geom= 'pointrange', 
+                position=position_dodge(width=0.95)) +
+  labs(x = "Condition",
+       y = "Proportion of responses",
+       title = "Response by condition and group") +
+  theme_minimal() +
+  geom_hline(yintercept = .5, linetype = "dotted") +
+  facet_grid(~exp_group)
+
+
+ggsave("Figures/experiment1_effect.png", 
+         units="in", width=6, height=4, dpi=300)
+ggsave("Figures/experiment1_effect.tiff", 
+         units="in", width=6, height=4, dpi=300)
+ggsave("Figures/experiment1_effect.pdf", 
+       units="in", width=6, height=4, dpi=300)
+```
+
+## Descriptive
+
+```{r}
+main_plus_sst %>%
+  group_by(exp_group,
+           condition) %>%
+  summarise(mean_request = mean(numeric_categorization2),
+            sd_request = sd(numeric_categorization2))
+
+```
+
+
+## 3a
+
+```{r}
+
+mixed.logit = glmer(factor(categorization) ~ stimType + (1 + stimType | subject) + 
+                      (1 + stimType | stimNum), 
+                    data = coded_3a, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.null = glmer(factor(categorization) ~ (1  + stimType | subject) + 
+                           (1 + stimType | stimNum), 
+                         data = coded_3a, 
+                         control=glmerControl(optimizer="bobyqa"),
+                         family=binomial) 
+
+comparison = anova(mixed.logit.null, mixed.logit)
+comparison
+
+
+```
+
+
+### Effect of order?
+
+```{r}
+mixed.logit = glmer(factor(categorization) ~ stimType * order + 
+                       (1 + stimType | subject) +
+                      (1 + stimType | stimNum), 
+                    data = coded_3a, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.null = glmer(factor(categorization) ~ stimType + order +
+                           (1 + stimType | subject) +
+                           (1 + stimType | stimNum), 
+                         data = coded_3a, 
+                         control=glmerControl(optimizer="bobyqa"),
+                         family=binomial) 
+
+comparison = anova(mixed.logit.null, mixed.logit)
+comparison
+
+mixed.logit = glmer(factor(categorization) ~ stimType + 
+                      (1 + stimType | stimNum), 
+                    data = filter(coded_3a, order ==1 ), 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.null = glmer(factor(categorization) ~ (1 + stimType | stimNum), 
+                         data = filter(coded_3a, order ==1 ), 
+                         control=glmerControl(optimizer="bobyqa"),
+                         family=binomial) 
+
+comparison = anova(mixed.logit.null, mixed.logit)
+comparison
+```
+
+
+## 3b
+
+```{r}
+
+mixed.logit = glmer(factor(categorization) ~ stimType + (1 + stimType | subject) + 
+                      (1 + stimType | stimNum), 
+                    data = coded_3b, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.null = glmer(factor(categorization) ~ (1  + stimType | subject) + 
+                           (1 + stimType | stimNum), 
+                         data = coded_3b, 
+                         control=glmerControl(optimizer="bobyqa"),
+                         family=binomial) 
+
+comparison = anova(mixed.logit.null, mixed.logit)
+comparison
+
+```
+
+
+### Effect of order?
+
+```{r}
+mixed.logit = glmer(factor(categorization) ~ stimType * order + 
+                       (1 + stimType | subject) +
+                      (1 + stimType | stimNum), 
+                    data = coded_3b, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.null = glmer(factor(categorization) ~ stimType + order +
+                           (1 + stimType | subject) +
+                           (1 + stimType | stimNum), 
+                         data = coded_3b, 
+                         control=glmerControl(optimizer="bobyqa"),
+                         family=binomial) 
+
+comparison = anova(mixed.logit.null, mixed.logit)
+comparison
+
+mixed.logit = glmer(factor(categorization) ~ stimType + 
+                      (1 | stimNum), 
+                    data = filter(coded_3b, order ==1 ), 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.null = glmer(factor(categorization) ~ (1 | stimNum), 
+                         data = filter(coded_3b, order ==1 ), 
+                         control=glmerControl(optimizer="bobyqa"),
+                         family=binomial) 
+
+comparison = anova(mixed.logit.null, mixed.logit)
+comparison
+```
+
+## Interaction between group and main effect
+
+```{r}
+mixed.logit.interaction = glmer(factor(numeric_categorization2) ~ condition * exp_group +
+                      (1 + condition | stimNum) +
+                      (1 + condition | subject), 
+                    data = main_plus_sst, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit.both = glmer(factor(numeric_categorization2) ~ condition + exp_group +
+                      (1 + condition | stimNum) +
+                      (1 + condition | subject), 
+                    data = main_plus_sst, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+mixed.logit = glmer(factor(numeric_categorization2) ~ condition + 
+                      (1 + condition | stimNum) +
+                      (1 + condition | subject), 
+                    data = main_plus_sst, 
+                    control=glmerControl(optimizer="bobyqa"),
+                    family=binomial) 
+
+anova(mixed.logit.interaction, mixed.logit.both)
+anova(mixed.logit.both, mixed.logit)
+
+```
+
+
+
+
+## Indirect requests and SST 
+
+
+### 3a
+
+```{r}
+coded_3a$rc.bins = cut(coded_3a$rc.mean, breaks=c(0, median(coded_3a$rc.mean), 11), labels=c("low", "high"))
+
+```
+
+
+#### Analysis
+
+```{r}
+
+mixed.logit.both = glmer(factor(categorization) ~ stimType*exp.inf.mean +
+                          stimType * rc.bins +
+                          (1 + stimType  | stimNum), 
+                        data = coded_3a, 
+                        family=binomial) 
+
+
+mixed.logit.both.reduced = glmer(factor(categorization) ~ exp.inf.mean +
+                          stimType * rc.bins +
+                          (1 + stimType  | stimNum), 
+                        data = coded_3a, 
+                        family=binomial) 
+
+mixed.logit.both.reduced2 = glmer(factor(categorization) ~ exp.inf.mean * stimType + rc.bins +
+                          (1 + stimType  | stimNum), 
+                        data = coded_3a, 
+                        family=binomial) 
+
+mixed.logit.inf= glmer(factor(categorization) ~ exp.inf.mean * stimType + 
+                          (1 + stimType  | stimNum), 
+                          control=glmerControl(optimizer="bobyqa"),
+                        data = coded_3a, 
+                        family=binomial) 
+
+mixed.logit.inf.reduced = glmer(factor(categorization) ~ exp.inf.mean + stimType +
+                          (1 + stimType  | stimNum), 
+                        data = coded_3a, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+anova(mixed.logit.both, mixed.logit.both.reduced)
+anova(mixed.logit.both, mixed.logit.both.reduced2)
+anova(mixed.logit.inf, mixed.logit.inf.reduced)
+
+
+```
+
+
+```{r}
+mixed.logit.spon = glmer(factor(categorization) ~ stimType*factor(spon.true) +
+                          (1 + stimType | stimNum), 
+                        data = coded_3a, 
+                        family=binomial) 
+mixed.logit.spon.reduced = glmer(factor(categorization) ~ stimType + factor(spon.true) +
+                          (1 + stimType | stimNum), 
+                        data = coded_3a, 
+                        family=binomial) 
+
+anova(mixed.logit.spon, mixed.logit.spon.reduced)
+```
+
+
+### 3b
+
+```{r}
+coded_3b$rc.bins = cut(coded_3b$rc.mean, breaks=c(0, median(coded_3b$rc.mean), 11), labels=c("low", "high"))
+```
+
+
+
+#### Analysis
+
+```{r}
+mixed.logit.both = glmer(factor(categorization) ~ stimType*exp.inf.mean +
+                          stimType * rc.bins +
+                          (1 + stimType  | stimNum), 
+                         control=glmerControl(optimizer="bobyqa"),
+                        data = coded_3b, 
+                        family=binomial) 
+
+
+mixed.logit.both.reduced = glmer(factor(categorization) ~ exp.inf.mean +
+                          stimType * rc.bins +
+                          (1 + stimType  | stimNum), 
+                          control=glmerControl(optimizer="bobyqa"),
+                        data = coded_3b, 
+                        family=binomial) 
+
+mixed.logit.both.reduced2 = glmer(factor(categorization) ~ exp.inf.mean * stimType + rc.bins +
+                          (1 + stimType  | stimNum), 
+                        data = coded_3b, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.inf= glmer(factor(categorization) ~ exp.inf.mean * stimType + 
+                          (1 + stimType  | stimNum), 
+                          control=glmerControl(optimizer="bobyqa"),
+                        data = coded_3b, 
+                        family=binomial) 
+
+mixed.logit.inf.reduced = glmer(factor(categorization) ~ exp.inf.mean + stimType +
+                          (1 + stimType  | stimNum), 
+                        data = coded_3b, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+anova(mixed.logit.both, mixed.logit.both.reduced)
+anova(mixed.logit.both, mixed.logit.both.reduced2)
+anova(mixed.logit.inf, mixed.logit.inf.reduced)
+```
+
+
+
+
+```{r}
+mixed.logit.spon = glmer(factor(categorization) ~ stimType*factor(spon.true) +
+                          (1 + stimType | stimNum), 
+                        data = coded_3b, 
+                        family=binomial) 
+mixed.logit.spon.reduced = glmer(factor(categorization) ~ stimType + factor(spon.true) +
+                          (1 + stimType | stimNum), 
+                        data = coded_3b, 
+                        family=binomial) 
+
+anova(mixed.logit.spon, mixed.logit.spon.reduced)
+```
+
+
+### Visualizations
+
+```{r}
+main_plus_sst %>%
+  ggplot(aes(x=exp.inf.mean, fill=Congruence)) +
+  geom_density(alpha=.5) +
+  theme_minimal() +
+  scale_fill_manual(values = c("congruent" = "seagreen2", "incongruent" = "tomato1")) +
+  xlab("Mentalizing score") +
+  ggtitle("Response congruence by mentalizing") +
+  facet_wrap(~exp_group, ncol = 2)
+
+ggsave("figures/exp4_mentalizing.png", 
+       units="in", width=6, height=4, dpi=300)
+ggsave("figures/exp4_mentalizing.pdf", 
+       units="in", width=6, height=4, dpi=300)
+ggsave("figures/exp4_mentalizing.tiff", 
+       units="in", width=6, height=4, dpi=300)
+```
+
+```{r}
+main_plus_sst %>%
+  ggplot(aes(x=exp.inf.mean, fill=categorization)) +
+  geom_density(alpha=.5) +
+  theme_minimal() +
+  # scale_fill_manual(values = c("congruent" = "seagreen2", "incongruent" = "tomato1")) +
+  xlab("Mentalizing score") +
+  ggtitle("Response congruence by mentalizing") +
+  facet_grid(~assignment + condition)
+```
+
+
+### Mentalizing three-way interaction
+
+
+```{r}
+main_plus_sst$rc.bins = cut(main_plus_sst$rc.mean, 
+                            breaks=c(0, median(main_plus_sst$rc.mean), 11), 
+                            labels=c("low", "high"))
+mixed.logit.both = glmer(factor(numeric_categorization2) ~ condition*exp.inf.mean*exp_group +
+                          stimType * rc.bins +
+                          (1 + stimType  | stimNum), 
+                         control=glmerControl(optimizer="bobyqa"),
+                        data = main_plus_sst, 
+                        family=binomial) 
+
+mixed.logit.reduced = glmer(factor(numeric_categorization2) ~ condition*exp.inf.mean +
+                           condition*exp_group +
+                           exp.inf.mean*exp_group+
+                          stimType * rc.bins +
+                          (1 + stimType  | stimNum), 
+                         control=glmerControl(optimizer="bobyqa"),
+                        data = main_plus_sst, 
+                        family=binomial) 
+
+
+anova(mixed.logit.both, mixed.logit.reduced)
+
+
+```
+

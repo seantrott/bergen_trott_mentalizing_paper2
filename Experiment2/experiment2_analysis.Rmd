@@ -1,0 +1,431 @@
+---
+title: "Experiment 2 Analysis"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r include = FALSE}
+library(tidyverse)
+library(forcats)
+library(lme4)
+library(psych)
+```
+
+**Sean Trott and Benjamin Bergen** 
+2019
+
+# Introduction
+
+In Experiment 2, we asked whether:  
+
+1. A speaker's knowledge state (implied or explicitly stated) predicted participants' pragmatic interpretations.  
+2. Individual differences in *mentalizing* predicted the effect in (1), for both *explicit* and *implicit* deliveries of knowledge.  
+
+
+# Load data
+
+```{r}
+# setwd("/Users/seantrott/Dropbox/UCSD/Research/IndirectSpeechActs/2019_mentalizing_data/Experiment2")
+main_plus_sst = read_csv("data/exp2_aggregated.csv")
+
+main_plus_sst$answer = factor(main_plus_sst$answer)
+```
+
+
+# Demographic info
+
+
+```{r}
+table(distinct(main_plus_sst, subject, Gender)$Gender)
+mean(distinct(main_plus_sst, subject, Age)$Age)
+sd(distinct(main_plus_sst, subject, Age)$Age)
+range(distinct(main_plus_sst, subject, Age)$Age)
+
+```
+
+
+# Results
+
+## Does speaker knowledge predict pragmatic interpretation?
+
+We asked whether a speaker's awareness of an obstacle predicted participants' likelihood of thinking they were making a request. We also manipulated *knowledge delivery*: whether or not information about the speaker's knowledge state was given explicitly, or required readers to infer it.
+
+
+```{r}
+main_plus_sst$knowledge <- factor(main_plus_sst$knowledge, levels = c("implicit", "explicit"))
+main_plus_sst %>%
+  ggplot(aes(x = Condition,
+             y = numeric_code)) +
+  # geom_bar(stat="summary", fun.y="mean", position="dodge", fill="#7293cb") +
+  geom_bar(stat="summary", fun.y="mean", position="dodge") +
+  theme_minimal() +
+  stat_summary (fun.y = function(x){mean(x)},
+                fun.ymin = function(x){mean(x) - 1*sd(x)/sqrt(length(x))},
+                fun.ymax = function(x){mean(x) + 1*sd(x)/sqrt(length(x))},
+                geom= 'pointrange', 
+                position=position_dodge(width=0.95)) +
+  labs(x = "",
+       y = "Proportion of request interpretations",
+       title = "Requests by speaker awareness and knowledge delivery") +
+  geom_hline(yintercept = .5, linetype = "dotted") +
+  scale_y_continuous(limits=c(0, 1)) +
+  facet_grid(~knowledge)
+
+ggsave("figures/exp5_knowledge_effect.tiff", 
+       units="in", width=6, height=4, dpi=300)
+ggsave("/Users/seantrott/Dropbox/UCSD/Research/IndirectSpeechActs/presentations/CRL/Figures/exp5_knowledge_main_effect.pdf", 
+       units="in", width=6, height=4, dpi=300)
+```
+
+
+```{r}
+model_all = glmer(data=main_plus_sst, 
+                  answer ~ stimType * knowledge +
+                     (1  + stimType | subject) + (1 + stimType | stimNum) + (1 | group),
+                  control=glmerControl(optimizer="bobyqa"),
+                   family=binomial())
+
+model_both = glmer(data=main_plus_sst, answer ~ stimType + knowledge +
+                          (1  + stimType | subject) + (1 + stimType | stimNum) + (1 | group),
+                   control=glmerControl(optimizer="bobyqa"),
+                        family=binomial())
+
+model_knowledge = glmer(data=main_plus_sst, answer ~ knowledge +
+                          (1  + stimType | subject) + (1 + stimType | stimNum) + (1 | group),
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial())
+
+model_awareness = glmer(data=main_plus_sst, answer ~ stimType +
+                  (1  + stimType | subject) + (1 + stimType | stimNum) + (1 | group),
+                  control=glmerControl(optimizer="bobyqa"),
+                family=binomial())
+
+model_null = glmer(data=main_plus_sst, answer ~ (1 + stimType | subject) + 
+                                  (1 + stimType | stimNum) + (1 | group),
+                   control=glmerControl(optimizer="bobyqa"),
+                  family=binomial())
+```
+
+
+```{r}
+anova(model_awareness, model_null)
+anova(model_knowledge, model_null)
+anova(model_both, model_knowledge)
+anova(model_both, model_awareness)
+anova(model_all, model_both)
+```
+
+According to the model comparisons, there is a main effect of **speaker knowledge** (more requests in the Speaker Unaware condition), a significant interaction between **speaker knowledge** and **knowledge delivery** (stronger impact of knowledge states on the *explicit* trials), and a weak effect of **knowledge delivery** (more requests on the *implicit* trials). 
+
+### Descriptive
+
+```{r}
+main_plus_sst %>%
+  group_by(knowledge, Condition) %>%
+  summarise(mean_request = mean(numeric_code),
+            sd_request = sd(numeric_code))
+```
+
+### Effect of order?
+
+```{r}
+
+model_order_all = glmer(data=main_plus_sst, 
+                        answer ~ stimType * order +
+                  (1  + stimType | subject) + (1 + stimType | stimNum),
+                  control=glmerControl(optimizer="bobyqa"),
+                family=binomial())
+
+model_order_all_reduced = glmer(data=main_plus_sst, 
+                        answer ~ stimType + order +
+                  (1  + stimType | subject) + (1 + stimType | stimNum),
+                  control=glmerControl(optimizer="bobyqa"),
+                family=binomial())
+
+anova(model_order_all, model_order_all_reduced)
+
+
+```
+
+
+
+```{r}
+
+model_awareness_first = glmer(data=filter(main_plus_sst, order <= 1), 
+                        answer ~ stimType + (1 + stimType | stimNum),
+                  control=glmerControl(optimizer="bobyqa"),
+                family=binomial())
+
+model_null_first = glmer(data=filter(main_plus_sst, order <= 1), 
+                   answer ~   (1 + stimType | stimNum),
+                   control=glmerControl(optimizer="bobyqa"),
+                  family=binomial())
+anova(model_awareness_first, model_null_first)
+
+
+
+model_awareness_first = glmer(data=filter(main_plus_sst, order <= 1 & knowledge == "explicit"), 
+                        answer ~ stimType + (1 | stimNum),
+                  control=glmerControl(optimizer="bobyqa"),
+                family=binomial())
+
+model_null_first = glmer(data=filter(main_plus_sst, order <= 1& knowledge == "explicit"), 
+                   answer ~   (1 | stimNum),
+                   control=glmerControl(optimizer="bobyqa"),
+                  family=binomial())
+anova(model_awareness_first, model_null_first)
+
+model_awareness_first = glmer(data=filter(main_plus_sst, order <= 1 & knowledge == "implicit"), 
+                        answer ~ stimType + (1 | stimNum),
+                  control=glmerControl(optimizer="bobyqa"),
+                family=binomial())
+
+model_null_first = glmer(data=filter(main_plus_sst, order <= 1& knowledge == "implicit"), 
+                   answer ~   (1 | stimNum),
+                   control=glmerControl(optimizer="bobyqa"),
+                  family=binomial())
+anova(model_awareness_first, model_null_first)
+```
+
+
+## Does mentalizing predict the impact of speaker knowledge?
+
+We also want to know whether **mentalizing** predicts a participant's likelihood of making a response *congruent* with what a speaker knows.
+
+```{r}
+
+main_plus_sst$Congruent = (main_plus_sst$Condition == "Speaker Unaware" & main_plus_sst$answer == "Yes") |
+  (main_plus_sst$Condition == "Speaker Aware" & main_plus_sst$answer == "No")
+
+main_plus_sst$Congruence = fct_recode(as.character(main_plus_sst$Congruent),
+                                     "congruent" = "TRUE",
+                                     "incongruent" = "FALSE")
+
+main_plus_sst$order_binned = cut(main_plus_sst$order, 
+                                 breaks=c(0, 4, 8, 12, 17), 
+                                 labels=c("first", "second", "third", "fourth"))
+
+main_plus_sst %>%
+  ggplot(aes(x=exp_inf_mean, fill=answer)) +
+  geom_density(alpha=.5) +
+  theme_minimal() +
+  # scale_fill_manual(values = c("congruent" = "seagreen2", "incongruent" = "tomato1")) +
+  xlab("Mentalizing score") +
+  ggtitle("Response congruence by mentalizing") +
+  facet_wrap(~Condition + knowledge, ncol = 2)
+
+main_plus_sst %>%
+  filter(knowledge == "explicit") %>%
+  ggplot(aes(x=exp_inf_mean, fill=Congruence)) +
+  geom_density(alpha=.5) +
+  theme_minimal() +
+  scale_fill_manual(values = c("congruent" = "seagreen2", "incongruent" = "tomato1")) +
+  labs(x = "Mentalizing score",
+       title = "Response congruence by mentalizing (explicit trials)") 
+
+ggsave("/Users/seantrott/Dropbox/UCSD/Research/IndirectSpeechActs/presentations/CRL/Figures/exp5_mentalizing_explicit.tiff", 
+       units="in", width=6, height=4, dpi=300, compression = 'lzw')
+
+main_plus_sst %>%
+  filter(knowledge == "implicit") %>%
+  ggplot(aes(x=exp_inf_mean, fill=Congruence)) +
+  geom_density(alpha=.5) +
+  theme_minimal() +
+  scale_fill_manual(values = c("congruent" = "seagreen2", "incongruent" = "tomato1")) +
+  labs(x = "Mentalizing score",
+       title = "Response congruence by mentalizing (implicit trials)") 
+
+ggsave("/Users/seantrott/Dropbox/UCSD/Research/IndirectSpeechActs/presentations/CRL/Figures/exp5_mentalizing_implicit.tiff", 
+       units="in", width=6, height=4, dpi=300, compression = 'lzw')
+
+main_plus_sst %>%
+  ggplot(aes(x=exp_inf_mean, fill=Congruence)) +
+  geom_density(alpha=.5) +
+  theme_minimal() +
+  scale_fill_manual(values = c("congruent" = "seagreen2", "incongruent" = "tomato1")) +
+  xlab("Mentalizing score") +
+  ggtitle("Response congruence by mentalizing") +
+  facet_wrap(~knowledge, ncol = 2)
+```
+
+
+### Building and comparing models
+
+```{r}
+
+mixed.logit.all.three = glmer(answer ~ Condition * exp_inf_mean * knowledge +
+                          Condition * rc_bins_1 * knowledge +
+                          (1 + Condition | stimNum), 
+                        data = main_plus_sst, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.all.three.reduced = glmer(answer ~ Condition * exp_inf_mean + Condition * knowledge + exp_inf_mean * knowledge + 
+                          Condition * rc_bins_1 * knowledge +
+                          (1 + Condition | stimNum), 
+                        data = main_plus_sst, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.just.explicit = glmer(answer ~ Condition * exp_inf_mean +
+                          Condition * rc_bins_1 +
+                          (1 + Condition | stimNum),  
+                        data = filter(main_plus_sst, knowledge == "explicit"), 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.just.explicit.reduced = glmer(answer ~ Condition + exp_inf_mean +
+                          Condition * rc_bins_1 +
+                          (1 + Condition | stimNum),  
+                        data = filter(main_plus_sst, knowledge == "explicit"), 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.just.implicit = glmer(answer ~ Condition * exp_inf_mean +
+                          Condition * rc_bins_1 +
+                          (1 + Condition | stimNum),  
+                        data = filter(main_plus_sst, knowledge == "implicit"), 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.just.implicit.reduced = glmer(answer ~ Condition + exp_inf_mean +
+                          Condition * rc_bins_1 +
+                          (1 + Condition | stimNum),  
+                        data = filter(main_plus_sst, knowledge == "implicit"), 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.all = glmer(answer ~ Condition * exp_inf_mean +
+                          Condition * rc_bins_1 +
+                          (1 + Condition | stimNum), 
+                        data = main_plus_sst, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.reduced = glmer(answer ~ Condition + exp_inf_mean +
+                          Condition * rc_bins_1 +
+                          (1 + Condition | stimNum), 
+                        data = main_plus_sst, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.reduced.rc = glmer(answer ~ Condition * exp_inf_mean +
+                              Condition + rc_bins_1 +
+                              (1 + Condition | stimNum), 
+                            data = main_plus_sst, 
+                            control=glmerControl(optimizer="bobyqa"),
+                            family=binomial) 
+
+mixed.logit.rc = glmer(answer ~ Condition * rc_bins_1 +
+                          (1 + Condition | stimNum), 
+                        data = main_plus_sst, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.rc.reduced = glmer(answer ~ Condition + rc_bins_1 +
+                                  (1 + Condition | stimNum), 
+                                data = main_plus_sst, 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+mixed.logit.inf = glmer(answer ~ Condition * exp_inf_mean +
+                          (1 + Condition | stimNum), 
+                        data = main_plus_sst, 
+                        control=glmerControl(optimizer="bobyqa"),
+                        family=binomial) 
+
+mixed.logit.inf.reduced = glmer(answer ~ Condition + exp_inf_mean +
+                                  (1 + Condition | stimNum), 
+                                data = main_plus_sst, 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+```
+
+
+```{r}
+anova(mixed.logit.just.implicit, mixed.logit.just.implicit.reduced)
+anova(mixed.logit.just.explicit, mixed.logit.just.explicit.reduced)
+
+anova(mixed.logit.all.three, mixed.logit.all.three.reduced)
+
+
+anova(mixed.logit.all, mixed.logit.reduced)
+anova(mixed.logit.all, mixed.logit.reduced.rc)
+anova(mixed.logit.inf, mixed.logit.inf.reduced)
+anova(mixed.logit.rc, mixed.logit.rc.reduced)
+```
+
+
+```{r}
+
+mixed.logit.spon = glmer(answer ~ Condition * factor(spon_true) +
+                                  (1 + Condition | stimNum), 
+                                data = filter(main_plus_sst, knowledge=="implicit"), 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+mixed.logit.spon.reduced = glmer(answer ~ Condition + factor(spon_true) +
+                                  (1 + Condition | stimNum), 
+                                data = filter(main_plus_sst, knowledge=="implicit"), 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+anova(mixed.logit.spon, mixed.logit.spon.reduced)
+
+mixed.logit.spon = glmer(answer ~ Condition * factor(spon_true) +
+                                  (1 + Condition | stimNum), 
+                                data = filter(main_plus_sst, knowledge=="explicit"), 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+mixed.logit.spon.reduced = glmer(answer ~ Condition + factor(spon_true) +
+                                  (1 + Condition | stimNum), 
+                                data = filter(main_plus_sst, knowledge=="explicit"), 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+anova(mixed.logit.spon, mixed.logit.spon.reduced)
+
+mixed.logit.spon.full = glmer(answer ~ Condition * factor(spon_true) + Condition * rc_bins_1 +
+                                  (1 + Condition | stimNum), 
+                                data = main_plus_sst, 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial)
+
+mixed.logit.spon.full.reduced = glmer(answer ~ Condition + factor(spon_true) + Condition * rc_bins_1 +
+                                  (1 + Condition | stimNum), 
+                                data = main_plus_sst, 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial)
+
+
+mixed.logit.spon = glmer(answer ~ Condition * factor(spon_true) +
+                                  (1 + Condition | stimNum), 
+                                data = main_plus_sst, 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+mixed.logit.spon.reduced = glmer(answer ~ Condition + factor(spon_true) +
+                                  (1 + Condition | stimNum), 
+                                data = main_plus_sst, 
+                                control=glmerControl(optimizer="bobyqa"),
+                                family=binomial) 
+
+anova(mixed.logit.spon.full, mixed.logit.spon.full.reduced)
+anova(mixed.logit.spon, mixed.logit.spon.reduced)
+
+```
+
+
+# Summary
+
+Main findings:  
+
+- **Speaker knowledge** significantly predicted **pragmatic interpretation**.  
+- **Knowledge delivery** (explicit / implicit) affected the rate at which knowledge predicted interpretation, providing evidence for *sampling loss*. However, the fact that accuracy rates were not 100% in the *explicit* condition (far from it) suggests that there is also a *lossy conversion* in *deploying* information about what a speaker knows for pragmatic inference.  
+- **Mentalizing** predicted a comprehender's likelihood of interpreting an utterance consistent with what a speaker could be inferred to know overall. There was not a significant *difference* in the effect of mentalizing on the implicit vs. explicit trials (as measured by the 3-way interaction between speaker knowledge, knowledge delivery, and mentalizing). 
+- However, when breaking it down by trial type, **mentalizing** was only strongly significant in the *explicit trials*; the effect in the implicit trials was weakly suggestive at best (p=.1). In other words, mentalizing predicts rate of deployment when knowledge is given explicitly, but not the combined rate of sampling and deployment when knowledge is given implicitly.
+
+
