@@ -7,7 +7,7 @@ output:
 
 
 
-**Sean Trott and Benjamin Bergen** 
+**Sean Trott and Benjamin Bergen**   
 2019
 
 # Data reading, cleaning
@@ -27,45 +27,6 @@ library(psych)
 main_plus_sst = read_csv("data/exp1_aggregated.csv")
 
 ```
-
-## Overall demographics
-
-```{r}
-table(distinct(main_plus_sst, subject, gender)$gender)
-mean(distinct(main_plus_sst, subject, age)$age)
-sd(distinct(main_plus_sst, subject, age)$age)
-range(distinct(main_plus_sst)$age)
-
-```
-
-Differences in demographics across experiments?
-
-```{r}
-
-only_unique_subjects = main_plus_sst %>%
-  distinct(subject, gender, assignment, age)
-
-table(only_unique_subjects$assignment)
-
-summary(aov(data = only_unique_subjects,
-           age ~ assignment))
-
-
-df_with_gender = only_unique_subjects %>%
-  group_by(assignment, gender) %>%
-  summarise(num_gender = n())
-
-M = as.table(rbind(filter(df_with_gender, assignment == "4a")$num_gender,
-             rbind(filter(df_with_gender, assignment == "4b")$num_gender)))
-
-dimnames(M) <- list(gender = c("Female", "Male"),
-                    assignment = c("4a", "4b"))
-
-M
-chisq.test(M)
-
-```
-
 
 ## Break into two experiments
 

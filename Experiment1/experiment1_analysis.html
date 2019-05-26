@@ -122,7 +122,6 @@ $(document).ready(function () {
 <div id="TOC">
 <ul>
 <li><a href="#data-reading-cleaning">Data reading, cleaning</a><ul>
-<li><a href="#overall-demographics">Overall demographics</a></li>
 <li><a href="#break-into-two-experiments">Break into two experiments</a></li>
 </ul></li>
 <li><a href="#analysis-indirect-requests-task">Analysis: Indirect requests task</a><ul>
@@ -175,58 +174,12 @@ main_plus_sst = read_csv(&quot;data/exp1_aggregated.csv&quot;)</code></pre>
 ##   exp_group = col_character()
 ## )</code></pre>
 <pre><code>## See spec(...) for full column specifications.</code></pre>
-<div id="overall-demographics" class="section level2">
-<h2>Overall demographics</h2>
-<pre class="r"><code>table(distinct(main_plus_sst, subject, gender)$gender)</code></pre>
-<pre><code>## 
-## Female   Male 
-##     68     74</code></pre>
-<pre class="r"><code>mean(distinct(main_plus_sst, subject, age)$age)</code></pre>
-<pre><code>## [1] 34.57042</code></pre>
-<pre class="r"><code>sd(distinct(main_plus_sst, subject, age)$age)</code></pre>
-<pre><code>## [1] 10.08292</code></pre>
-<pre class="r"><code>range(distinct(main_plus_sst)$age)</code></pre>
-<pre><code>## [1] 19 71</code></pre>
-<p>Differences in demographics across experiments?</p>
-<pre class="r"><code>only_unique_subjects = main_plus_sst %&gt;%
-  distinct(subject, gender, assignment, age)
-
-table(only_unique_subjects$assignment)</code></pre>
-<pre><code>## 
-## 4a 4b 
-## 56 86</code></pre>
-<pre class="r"><code>summary(aov(data = only_unique_subjects,
-           age ~ assignment))</code></pre>
-<pre><code>##              Df Sum Sq Mean Sq F value Pr(&gt;F)
-## assignment    1     36   36.24   0.355  0.552
-## Residuals   140  14299  102.13</code></pre>
-<pre class="r"><code>df_with_gender = only_unique_subjects %&gt;%
-  group_by(assignment, gender) %&gt;%
-  summarise(num_gender = n())
-
-M = as.table(rbind(filter(df_with_gender, assignment == &quot;4a&quot;)$num_gender,
-             rbind(filter(df_with_gender, assignment == &quot;4b&quot;)$num_gender)))</code></pre>
-<pre><code>## Warning: package 'bindrcpp' was built under R version 3.4.4</code></pre>
-<pre class="r"><code>dimnames(M) &lt;- list(gender = c(&quot;Female&quot;, &quot;Male&quot;),
-                    assignment = c(&quot;4a&quot;, &quot;4b&quot;))
-
-M</code></pre>
-<pre><code>##         assignment
-## gender   4a 4b
-##   Female 29 27
-##   Male   39 47</code></pre>
-<pre class="r"><code>chisq.test(M)</code></pre>
-<pre><code>## 
-##  Pearson's Chi-squared test with Yates' continuity correction
-## 
-## data:  M
-## X-squared = 0.3347, df = 1, p-value = 0.5629</code></pre>
-</div>
 <div id="break-into-two-experiments" class="section level2">
 <h2>Break into two experiments</h2>
 <pre class="r"><code>coded_3a = main_plus_sst %&gt;%
-  filter(assignment == &quot;4a&quot;)
-length(unique(coded_3a$subject))</code></pre>
+  filter(assignment == &quot;4a&quot;)</code></pre>
+<pre><code>## Warning: package 'bindrcpp' was built under R version 3.4.4</code></pre>
+<pre class="r"><code>length(unique(coded_3a$subject))</code></pre>
 <pre><code>## [1] 56</code></pre>
 <pre class="r"><code>coded_3b = main_plus_sst %&gt;%
   filter(assignment == &quot;4b&quot;)

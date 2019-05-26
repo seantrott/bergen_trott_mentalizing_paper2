@@ -12,7 +12,7 @@ library(lme4)
 library(psych)
 ```
 
-**Sean Trott and Benjamin Bergen** 
+**Sean Trott and Benjamin Bergen**   
 2019
 
 # Introduction
@@ -32,17 +32,6 @@ main_plus_sst = read_csv("data/exp2_aggregated.csv")
 main_plus_sst$answer = factor(main_plus_sst$answer)
 ```
 
-
-# Demographic info
-
-
-```{r}
-table(distinct(main_plus_sst, subject, Gender)$Gender)
-mean(distinct(main_plus_sst, subject, Age)$Age)
-sd(distinct(main_plus_sst, subject, Age)$Age)
-range(distinct(main_plus_sst, subject, Age)$Age)
-
-```
 
 
 # Results
