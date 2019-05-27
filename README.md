@@ -23,11 +23,16 @@ The following factors are consistent across both experiments:
 `Condition`: was the speaker aware or unaware of an obstacle to fulfilling a request?  
 Factor levels: `Speaker Unaware`, `Speaker Aware`
 
+`answer`: participant response (`yes` or `no`).  
+(Note that for Experiment 1, the meaning of this variable changes depending on experimental group; see notes below.)
+
 `Order`: trial order (continuous, 1-8 or 1-16)
 
 **Random factors**:  
 - `subject`: subject ID  
 - `stimNum`: item number  
+
+
 
 #### Experiment 1
 
