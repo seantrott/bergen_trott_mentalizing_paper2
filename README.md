@@ -16,12 +16,14 @@ The aggregated critical data is found under `Experiment1/data` and `Experiment2/
 
 Note that this data does not include identifying information about a participant's gender or age. Please contact Sean Trott (sttrott at ucsd dot edu) separately for demographic information.
 
-### Critical variables
+### Primary variables
 
 The following factors are consistent across both experiments:
 
-**Condition**: was the speaker aware or unaware of an obstacle to fulfilling a request?  
+`Condition`: was the speaker aware or unaware of an obstacle to fulfilling a request?  
 Factor levels: `Speaker Unaware`, `Speaker Aware`
+
+`Order`: trial order (continuous, 1-8 or 1-16)
 
 **Random factors**:  
 - `subject`: subject ID  
@@ -29,6 +31,9 @@ Factor levels: `Speaker Unaware`, `Speaker Aware`
 
 #### Experiment 1
 
+**Experimental group**: Participants in Experiment were assigned to one of two experimental groups: **Inference** or **Knowledge**. This is indicated by the `exp_group` variable. 
+
+[exp_group, etc.]
 
 
 
