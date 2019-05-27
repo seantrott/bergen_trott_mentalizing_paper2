@@ -18,8 +18,18 @@ Note that this data does not include identifying information about a participant
 
 ### Critical variables
 
+The following factors are consistent across both experiments:
 
-**Condition**: Speaker Unaware, Speaker Aware
+**Condition**: was the speaker aware or unaware of an obstacle to fulfilling a request? 
+Factor levels: `Speaker Unaware`, `Speaker Aware`
+
+
+#### Experiment 1
+
+
+
+
+
 
 ## Analyses
 
