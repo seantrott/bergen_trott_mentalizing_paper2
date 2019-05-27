@@ -39,7 +39,7 @@ Individual difference variables:
 - `spon.true`: Spontaneous mental state reasoning scores, including tiebreaker codes.  
 
 `numeric_categorization2`: recoded version of `answer`, to align `yes` responses across experimental groups.  
-In the Knowledge* group, a "Yes" response would by default be correct in Speaker Aware condition, e.g. "Yes, the speaker is aware of the obstacle"; whereas in the *Inference* group, a "Yes" response would by default be correct in the Speaker Unaware condition, e.g. "Yes, the speaker is making a request". This recoding inverts *Knowledge* answers, such that a "Yes" now corresponds to: "Yes, the speaker is unaware of the obstacle". This allows for direct comparison across experimental groups in which the same expected outcome corresponds to each condition.
+In the *Knowledge* group, a "Yes" response would by default be correct in Speaker Aware condition, e.g. "Yes, the speaker is aware of the obstacle"; whereas in the *Inference* group, a "Yes" response would by default be correct in the Speaker Unaware condition, e.g. "Yes, the speaker is making a request". This recoding inverts *Knowledge* answers, such that a "Yes" now corresponds to: "Yes, the speaker is unaware of the obstacle". This allows for direct comparison across experimental groups in which the same expected outcome corresponds to each condition.
 
 
 #### Experiment 2
