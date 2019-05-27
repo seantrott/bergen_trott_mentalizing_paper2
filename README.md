@@ -31,19 +31,27 @@ Factor levels: `Speaker Unaware`, `Speaker Aware`
 
 #### Experiment 1
 
+`exp_group`: Participants in Experiment were assigned to one of two experimental groups: **Inference** or **Knowledge**  
 Individual difference variables:  
-- `exp_group`: Participants in Experiment were assigned to one of two experimental groups: **Inference** or **Knowledge**  
 - `exp.inf.mean`: Mean explicit mental state reasoning score (averaged across both coders).  
 - `rc.mean`: Mean reading comprehension score (averaged across both coders).  
 - `rc.bins`: Binned reading comprehension (created in `experiment1_analysis.Rmd`)  
 - `spon.true`: Spontaneous mental state reasoning scores, including tiebreaker codes.  
 
-`numeric_categorization2`: recoded version of `answer`, to align `yes` responses across experimental groups. (In *Knowledge* group, a "Yes" response would by default be correct in Speaker Aware condition, whereas in the *Inference* group, a "No" response would by default be correct in the Speaker Unaware condition. This recoding allows for direct comparison across experimental groups in which the same expected outcome corresponds to each condition.)
+`numeric_categorization2`: recoded version of `answer`, to align `yes` responses across experimental groups.  
+In the Knowledge* group, a "Yes" response would by default be correct in Speaker Aware condition, e.g. "Yes, the speaker is aware of the obstacle"; whereas in the *Inference* group, a "Yes" response would by default be correct in the Speaker Unaware condition, e.g. "Yes, the speaker is making a request". This recoding inverts *Knowledge* answers, such that a "Yes" now corresponds to: "Yes, the speaker is unaware of the obstacle". This allows for direct comparison across experimental groups in which the same expected outcome corresponds to each condition.
 
 
+#### Experiment 2
+
+Individual difference variables:  
+- `exp_inf_mean`: Mean explicit mental state reasoning score (averaged across both coders).  
+- `rc_mean`: Mean reading comprehension score (averaged across both coders).  
+- `rc_bins_1`: Binned reading comprehension (created in `experiment1_analysis.Rmd`)  
+- `spon_true`: Spontaneous mental state reasoning scores, including tiebreaker codes. 
 
 
-**Random factors**:  
+#### Random factors  
 - `subject`: subject ID  
 - `stimNum`: item number  
 
