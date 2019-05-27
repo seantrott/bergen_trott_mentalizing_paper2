@@ -23,6 +23,9 @@ The following factors are consistent across both experiments:
 **Condition**: was the speaker aware or unaware of an obstacle to fulfilling a request?  
 Factor levels: `Speaker Unaware`, `Speaker Aware`
 
+**Random factors**:  
+- `subject`: subject ID  
+- `stimNum`: item number  
 
 #### Experiment 1
 
