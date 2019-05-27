@@ -28,28 +28,24 @@ Factor levels: `Speaker Unaware`, `Speaker Aware`
 
 `Order`: trial order (continuous, 1-8 or 1-16)
 
-**Random factors**:  
-- `subject`: subject ID  
-- `stimNum`: item number  
-
-
 
 #### Experiment 1
 
-`exp_group`: Participants in Experiment were assigned to one of two experimental groups: **Inference** or **Knowledge**
-
-`exp.inf.mean`: Mean explicit mental state reasoning score (averaged across both coders).
-
-`rc.mean`: Mean reading comprehension score (averaged across both coders).
-
-`rc.bins`: Binned reading comprehension (created in `experiment1_analysis.Rmd`)
-
-`spon.true`: Spontaneous mental state reasoning scores, including tiebreaker codes.
-
-[exp_group, etc.]
+Individual difference variables:  
+- `exp_group`: Participants in Experiment were assigned to one of two experimental groups: **Inference** or **Knowledge**  
+-`exp.inf.mean`: Mean explicit mental state reasoning score (averaged across both coders).  
+-`rc.mean`: Mean reading comprehension score (averaged across both coders).  
+-`rc.bins`: Binned reading comprehension (created in `experiment1_analysis.Rmd`)  
+-`spon.true`: Spontaneous mental state reasoning scores, including tiebreaker codes.  
 
 
 
+
+
+
+**Random factors**:  
+- `subject`: subject ID  
+- `stimNum`: item number  
 
 
 ## Analyses
