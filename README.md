@@ -38,7 +38,7 @@ Individual difference variables:
 - `rc.bins`: Binned reading comprehension (created in `experiment1_analysis.Rmd`)  
 - `spon.true`: Spontaneous mental state reasoning scores, including tiebreaker codes.  
 
-
+`numeric_categorization2`: recoded version of `answer`, to align `yes` responses across experimental groups. (In *Knowledge* group, a "Yes" response would by default be correct in Speaker Aware condition, whereas in the *Inference* group, a "No" response would by default be correct in the Speaker Unaware condition. This recoding allows for direct comparison across experimental groups in which the same expected outcome corresponds to each condition.)
 
 
 
