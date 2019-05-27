@@ -20,7 +20,7 @@ Note that this data does not include identifying information about a participant
 
 The following factors are consistent across both experiments:
 
-**Condition**: was the speaker aware or unaware of an obstacle to fulfilling a request? 
+**Condition**: was the speaker aware or unaware of an obstacle to fulfilling a request?  
 Factor levels: `Speaker Unaware`, `Speaker Aware`
 
 
